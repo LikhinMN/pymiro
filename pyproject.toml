@@ -9,17 +9,24 @@ description = "A signal-native, declarative GUI framework for Python"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
-keywords = ["gui", "signals", "reactive", "desktop", "framework"]
+keywords = [
+    "gui", "framework", "reactive", "signals",
+    "desktop", "declarative", "pyside6", "qt"
+]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Desktop Environment",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pyside6>=6.7.0",
+    "PySide6>=6.7.0",
     "qasync>=0.27.0",
-    "watchdog>=6.0.0",
+    "watchdog>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -31,17 +38,24 @@ dev = [
     "mypy",
     "pytest",
     "pytest-asyncio",
+    "pytest-qt",
 ]
+
+[project.urls]
+Homepage = "https://github.com/LikhinMN/pymiro"
+Repository = "https://github.com/LikhinMN/pymiro"
+Issues = "https://github.com/LikhinMN/pymiro/issues"
 
 [tool.ruff]
 target-version = "py312"
 line-length = 88
 
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
 
-[dependency-groups]
-dev = [
-    "pytest-qt>=4.5.0",
-]
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
