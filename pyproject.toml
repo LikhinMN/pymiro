@@ -29,7 +29,7 @@ dependencies = [
     "watchdog>=4.0.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "hatchling",
     "build",

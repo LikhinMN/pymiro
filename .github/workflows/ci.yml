@@ -23,8 +23,18 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Install Qt dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libxcb-shape0 libxcb-cursor0
+
       - name: Run tests
-        run: uv run pytest tests/ -v --tb=short
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            xvfb-run -a uv run pytest tests/ -v --tb=short
+          else
+            uv run pytest tests/ -v --tb=short
+          fi
+        shell: bash
 
       - name: Type check
         run: uv run mypy pymiro/ --strict
