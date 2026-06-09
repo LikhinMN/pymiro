@@ -13,8 +13,9 @@ class QtRenderer(QObject):
     Implements the Renderer protocol for Qt.
     Mutates Qt widgets based on reconciler patches.
     """
-    def __init__(self, root_widget: QWidget | None = None) -> None:
+    def __init__(self, root_widget: QWidget | None = None, logger: Any = None) -> None:
         super().__init__()
+        self.logger = logger
         self.registry: dict[str, QWidget] = {}
         if root_widget is not None:
             self.registry["root"] = root_widget
@@ -108,10 +109,16 @@ class QtRenderer(QObject):
                 if w is not None:
                     layout.removeWidget(w)
                     
-        for cid in child_ids:
+        is_grid = hasattr(layout, "addWidget") and parent.property("grid_cols") is not None
+        cols = parent.property("grid_cols") or 2
+                    
+        for idx, cid in enumerate(child_ids):
             child = self.registry.get(cid)
             if child is not None:
-                layout.addWidget(child)
+                if is_grid:
+                    layout.addWidget(child, idx // cols, idx % cols) # type: ignore
+                else:
+                    layout.addWidget(child)
 
     def move(
         self,
@@ -131,7 +138,14 @@ class QtRenderer(QObject):
                 
         new_layout = new_parent.layout()
         if new_layout is not None:
-            new_layout.addWidget(widget)
+            is_grid = hasattr(new_layout, "addWidget") and new_parent.property("grid_cols") is not None
+            if is_grid:
+                # Approximate move appending to the end
+                idx = new_layout.count()
+                cols = new_parent.property("grid_cols") or 2
+                new_layout.addWidget(widget, idx // cols, idx % cols) # type: ignore
+            else:
+                new_layout.addWidget(widget)
 
     def bind_event(
         self,
@@ -145,7 +159,7 @@ class QtRenderer(QObject):
             
         if (node_id, event) in self.event_connections:
             # Update the existing wrapper without disconnecting Qt signal
-            self.event_connections[(node_id, event)]["handler"] = handler
+            self.event_connections[(node_id, event)]["state"]["handler"] = handler
             return
             
         state = {"handler": handler}
@@ -153,11 +167,22 @@ class QtRenderer(QObject):
         def wrapper(*args: Any, **kwargs: Any) -> None:
             state["handler"](*args, **kwargs)
             
+        from PySide6.QtWidgets import QLineEdit, QCheckBox, QComboBox, QSlider, QTabWidget
+            
         conn = None
         if event == "on_click" and hasattr(widget, "clicked"):
             conn = widget.clicked.connect(wrapper)
-        elif event == "on_change" and hasattr(widget, "textChanged"):
-            conn = widget.textChanged.connect(wrapper)
+        elif event == "on_change":
+            if isinstance(widget, QLineEdit):
+                conn = widget.textChanged.connect(wrapper)
+            elif isinstance(widget, QCheckBox):
+                conn = widget.toggled.connect(wrapper)
+            elif isinstance(widget, QComboBox):
+                conn = widget.currentTextChanged.connect(wrapper)
+            elif isinstance(widget, QSlider):
+                conn = widget.valueChanged.connect(wrapper)
+            elif isinstance(widget, QTabWidget):
+                conn = widget.currentChanged.connect(wrapper)
             
         if conn is not None:
             self.event_connections[(node_id, event)] = {"conn": conn, "wrapper": wrapper, "state": state}
@@ -173,10 +198,20 @@ class QtRenderer(QObject):
             widget = self.registry.get(node_id)
             if widget is not None:
                 try:
+                    from PySide6.QtWidgets import QLineEdit, QCheckBox, QComboBox, QSlider, QTabWidget
                     if event == "on_click" and hasattr(widget, "clicked"):
                         widget.clicked.disconnect(conn)
-                    elif event == "on_change" and hasattr(widget, "textChanged"):
-                        widget.textChanged.disconnect(conn)
+                    elif event == "on_change":
+                        if isinstance(widget, QLineEdit):
+                            widget.textChanged.disconnect(conn)
+                        elif isinstance(widget, QCheckBox):
+                            widget.toggled.disconnect(conn)
+                        elif isinstance(widget, QComboBox):
+                            widget.currentTextChanged.disconnect(conn)
+                        elif isinstance(widget, QSlider):
+                            widget.valueChanged.disconnect(conn)
+                        elif isinstance(widget, QTabWidget):
+                            widget.currentChanged.disconnect(conn)
                 except Exception:
                     pass
 
@@ -197,6 +232,9 @@ class QtRenderer(QObject):
                 self.move(patch.node_id, patch.new_parent_id)
 
     def commit(self, patches: list[Patch]) -> None:
+        if self.logger:
+            for patch in patches:
+                self.logger.commit(patch)
         self._pending_patches.extend(patches)
         QMetaObject.invokeMethod(self, "_apply_patches", Qt.ConnectionType.QueuedConnection)
 
