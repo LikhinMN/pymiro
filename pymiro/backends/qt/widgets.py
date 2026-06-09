@@ -2,35 +2,40 @@
 Qt widget mappings for pymiro.
 """
 from typing import Any
-from PySide6.QtWidgets import QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit
+from PySide6.QtWidgets import QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QSizePolicy
+from PySide6.QtCore import Qt
 
 def create_widget(vnode_type: str) -> QWidget:
+    widget: QWidget
     if vnode_type == "div":
-        frame = QFrame()
+        widget = QFrame()
         layout_v: QVBoxLayout = QVBoxLayout()
         layout_v.setContentsMargins(0, 0, 0, 0)
-        frame.setLayout(layout_v)
-        return frame
+        layout_v.setAlignment(Qt.AlignmentFlag.AlignTop)
+        widget.setLayout(layout_v)
     elif vnode_type == "row":
-        frame = QFrame()
+        widget = QFrame()
         layout_h: QHBoxLayout = QHBoxLayout()
         layout_h.setContentsMargins(0, 0, 0, 0)
-        frame.setLayout(layout_h)
-        return frame
+        layout_h.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        widget.setLayout(layout_h)
     elif vnode_type == "col":
-        frame = QFrame()
+        widget = QFrame()
         layout_c: QVBoxLayout = QVBoxLayout()
         layout_c.setContentsMargins(0, 0, 0, 0)
-        frame.setLayout(layout_c)
-        return frame
+        layout_c.setAlignment(Qt.AlignmentFlag.AlignTop)
+        widget.setLayout(layout_c)
     elif vnode_type == "text":
-        return QLabel()
+        widget = QLabel()
     elif vnode_type == "button":
-        return QPushButton()
+        widget = QPushButton()
     elif vnode_type == "input":
-        return QLineEdit()
+        widget = QLineEdit()
     else:
         raise ValueError(f"Unknown vnode type: {vnode_type}")
+
+    widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+    return widget
 
 def apply_prop(widget: QWidget, key: str, value: Any) -> None:
     if key in ("text", "label", "children"):
@@ -48,6 +53,11 @@ def apply_prop(widget: QWidget, key: str, value: Any) -> None:
         widget.setEnabled(not value)
     elif key == "style":
         widget.setStyleSheet(str(value))
+    elif key == "stretch":
+        if value:
+            widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        else:
+            widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
 def remove_prop(widget: QWidget, key: str) -> None:
     if key in ("text", "label", "children"):
@@ -59,5 +69,7 @@ def remove_prop(widget: QWidget, key: str) -> None:
         widget.setEnabled(True)
     elif key == "style":
         widget.setStyleSheet("")
+    elif key == "stretch":
+        widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
 __all__ = ["create_widget", "apply_prop", "remove_prop"]
