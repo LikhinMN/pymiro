@@ -1,13 +1,27 @@
 """
 Qt widget mappings for pymiro.
 """
+
 from typing import Any
-from PySide6.QtWidgets import (
-    QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
-    QLineEdit, QSizePolicy, QGridLayout, QProgressBar, QComboBox, 
-    QCheckBox, QSlider, QTabWidget
-)
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QSlider,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
 
 def create_widget(vnode_type: str) -> Any:
     widget: Any
@@ -52,7 +66,7 @@ def create_widget(vnode_type: str) -> Any:
         widget.setFrameShadow(QFrame.Shadow.Sunken)
     elif vnode_type == "spinner":
         widget = QProgressBar()
-        widget.setMaximum(0) # indeterminate
+        widget.setMaximum(0)  # indeterminate
         widget.setMinimum(0)
     elif vnode_type == "progressbar":
         widget = QProgressBar()
@@ -73,11 +87,14 @@ def create_widget(vnode_type: str) -> Any:
         if isinstance(widget, (QPushButton, QLineEdit, QCheckBox, QComboBox)):
             widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         elif vnode_type == "spacer":
-            pass # keep Expanding
+            pass  # keep Expanding
         else:
-            widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        
+            widget.setSizePolicy(
+                QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
+            )
+
     return widget
+
 
 def apply_prop(widget: Any, key: str, value: Any) -> None:
     if key in ("text", "label", "children"):
@@ -97,9 +114,13 @@ def apply_prop(widget: Any, key: str, value: Any) -> None:
         widget.setStyleSheet(str(value))
     elif key == "stretch":
         if value:
-            widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            widget.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            )
         else:
-            widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+            widget.setSizePolicy(
+                QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
+            )
     elif key == "width":
         if value == "full":
             policy = widget.sizePolicy()
@@ -165,6 +186,7 @@ def apply_prop(widget: Any, key: str, value: Any) -> None:
     elif key == "active" and isinstance(widget, QTabWidget):
         widget.setCurrentIndex(int(value))
 
+
 def remove_prop(widget: Any, key: str) -> None:
     if key in ("text", "label", "children"):
         if isinstance(widget, (QLabel, QPushButton, QLineEdit, QCheckBox)):
@@ -196,5 +218,6 @@ def remove_prop(widget: Any, key: str) -> None:
         widget.setLineWidth(1)
     elif key == "tabs" and isinstance(widget, QTabWidget):
         widget.clear()
+
 
 __all__ = ["create_widget", "apply_prop", "remove_prop"]

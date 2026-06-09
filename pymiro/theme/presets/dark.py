@@ -1,10 +1,15 @@
 """
 Dark theme preset.
 """
-from pymiro.theme.tokens import (
-    ColorTokens, SpacingTokens, TypographyTokens, RadiusTokens, ShadowTokens
-)
+
 from pymiro.theme.theme import Theme
+from pymiro.theme.tokens import (
+    ColorTokens,
+    RadiusTokens,
+    ShadowTokens,
+    SpacingTokens,
+    TypographyTokens,
+)
 
 DARK_THEME = Theme(
     name="dark",
@@ -25,10 +30,10 @@ DARK_THEME = Theme(
         success_text="#ffffff",
         warning_text="#ffffff",
         error_text="#ffffff",
-        info_text="#ffffff"
+        info_text="#ffffff",
     ),
     spacing=SpacingTokens(),
     typography=TypographyTokens(),
     radius=RadiusTokens(),
-    shadow=ShadowTokens()
+    shadow=ShadowTokens(),
 )

@@ -1,8 +1,13 @@
 from dataclasses import dataclass
 
 from pymiro.theme.tokens import (
-    ColorTokens, SpacingTokens, TypographyTokens, RadiusTokens, ShadowTokens
+    ColorTokens,
+    RadiusTokens,
+    ShadowTokens,
+    SpacingTokens,
+    TypographyTokens,
 )
+
 
 @dataclass(frozen=True)
 class Theme:
@@ -155,5 +160,6 @@ class Theme:
         }}
         """
         return qss
+
 
 __all__ = ["Theme"]

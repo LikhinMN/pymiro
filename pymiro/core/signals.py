@@ -1,48 +1,67 @@
 """
 Reactive signal primitives for pymiro.
 """
+
 import contextlib
 import weakref
 from collections.abc import Callable, Generator
 from contextvars import ContextVar
-from typing import Any, Generic, Protocol, TypeVar, cast, overload
+from typing import Any, Protocol, TypeVar, cast, overload
 
-T = TypeVar('T')
-T_co = TypeVar('T_co', covariant=True)
+T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
+
 
 class CycleError(Exception):
     """Raised when a cyclical dependency is detected in computed signals or effects."""
+
     pass
+
 
 class ComputedSideEffectError(Exception):
     """Raised when an effect is created inside a computed signal."""
+
     pass
+
 
 class _Publisher(Protocol):
     def _add_subscriber(self, subscriber: "_Subscriber") -> None: ...
     def _remove_subscriber(self, subscriber: "_Subscriber") -> None: ...
 
+
 class _Subscriber(Protocol):
     def _notify(self) -> None: ...
     def _add_dependency(self, publisher: _Publisher) -> None: ...
 
-_current_tracking_context: ContextVar[_Subscriber | None] = ContextVar("_current_tracking_context", default=None)
-_evaluation_stack: ContextVar[tuple[Any, ...]] = ContextVar("_evaluation_stack", default=())
+
+_current_tracking_context: ContextVar[_Subscriber | None] = ContextVar(
+    "_current_tracking_context", default=None
+)
+_evaluation_stack: ContextVar[tuple[Any, ...]] = ContextVar(
+    "_evaluation_stack", default=()
+)
 _batch_depth: ContextVar[int] = ContextVar("_batch_depth", default=0)
-_batched_effects: ContextVar[set["_Effect"]] = ContextVar("_batched_effects", default=set())
+_batched_effects: ContextVar[set["_Effect"]] = ContextVar(
+    "_batched_effects", default=set()
+)
 _active_effects: set["_Effect"] = set()
+
 
 class Signal(Protocol[T]):
     """Protocol for a reactive signal."""
+
     def __call__(self) -> T: ...
     def set(self, value: T) -> None: ...
     def peek(self) -> T: ...
 
+
 class Computed(Protocol[T_co]):
     """Protocol for a derived reactive value."""
+
     def __call__(self) -> T_co: ...
 
-class _Signal(Generic[T]):
+
+class _Signal[T]:
     def __init__(self, value: T) -> None:
         self._value = value
         self._subscribers: weakref.WeakSet[_Subscriber] = weakref.WeakSet()
@@ -73,7 +92,7 @@ class _Signal(Generic[T]):
         self._subscribers.discard(subscriber)
 
 
-class _Computed(Generic[T]):
+class _Computed[T]:
     def __init__(self, fn: Callable[[], T]) -> None:
         self._fn = fn
         self._value: T | None = None
@@ -86,8 +105,8 @@ class _Computed(Generic[T]):
         if self in current_stack:
             names = []
             for item in current_stack + (self,):
-                if hasattr(item, '_fn'):
-                    names.append(getattr(item._fn, '__name__', str(item)))
+                if hasattr(item, "_fn"):
+                    names.append(getattr(item._fn, "__name__", str(item)))
                 else:
                     names.append(str(item))
             raise CycleError(f"Cycle detected: {' -> '.join(names)}")
@@ -135,8 +154,10 @@ class _Computed(Generic[T]):
 class _Effect:
     def __init__(self, fn: Callable[[], None]) -> None:
         if isinstance(_current_tracking_context.get(), _Computed):
-            raise ComputedSideEffectError("Cannot create an effect inside a computed signal")
-            
+            raise ComputedSideEffectError(
+                "Cannot create an effect inside a computed signal"
+            )
+
         self._fn = fn
         self._dependencies: set[_Publisher] = set()
         self._active = True
@@ -152,8 +173,8 @@ class _Effect:
             if self in current_stack:
                 names = []
                 for item in current_stack + (self,):
-                    if hasattr(item, '_fn'):
-                        names.append(getattr(item._fn, '__name__', str(item)))
+                    if hasattr(item, "_fn"):
+                        names.append(getattr(item._fn, "__name__", str(item)))
                     else:
                         names.append(str(item))
                 raise CycleError(f"Cycle detected: {' -> '.join(names)}")
@@ -218,10 +239,12 @@ def _batch_cm() -> Generator[None, Any, None]:
                         flush_count += 1
                         if flush_count > 100:
                             _batched_effects.set(set())
-                            raise CycleError("Maximum batch flush limit exceeded. Cycle detected.")
+                            raise CycleError(
+                                "Maximum batch flush limit exceeded. Cycle detected."
+                            )
                         _batched_effects.set(set())
                         for eff in effects:
-                            if getattr(eff, '_active', True):
+                            if getattr(eff, "_active", True):
                                 eff._run()
                 finally:
                     _batch_depth.set(0)
@@ -229,20 +252,20 @@ def _batch_cm() -> Generator[None, Any, None]:
             _batch_depth.set(depth)
 
 
-def signal(value: T) -> Signal[T]:
+def signal[T](value: T) -> Signal[T]:
     """
     Create a reactive signal holding a value.
-    
+
     Returns a Signal object which can be called to read its value,
     or updated using the .set() method.
     """
     return _Signal(value)
 
 
-def computed(fn: Callable[[], T]) -> Computed[T]:
+def computed[T](fn: Callable[[], T]) -> Computed[T]:
     """
     Create a reactive computed value derived from other signals.
-    
+
     The computed value auto-tracks dependencies and lazily recomputes
     only when a dependency changes.
     """
@@ -252,7 +275,7 @@ def computed(fn: Callable[[], T]) -> Computed[T]:
 def effect(fn: Callable[[], None]) -> Callable[[], None]:
     """
     Run a function immediately and re-run it when its dependencies change.
-    
+
     Returns a disposer function. Calling the disposer stops the effect
     from re-running and cleans up subscriptions.
     """
@@ -261,16 +284,18 @@ def effect(fn: Callable[[], None]) -> Callable[[], None]:
 
 
 @overload
-def batch(fn: Callable[[], T]) -> T: ...
+def batch[T](fn: Callable[[], T]) -> T: ...
+
 
 @overload
 def batch() -> contextlib.AbstractContextManager[None]: ...
 
-def batch(fn: Callable[[], T] | None = None) -> Any:
+
+def batch[T](fn: Callable[[], T] | None = None) -> Any:
     """
     Batch multiple signal updates so that effects only run once
     after the batch completes.
-    
+
     Can be used as a context manager `with batch():` or as a higher-order
     function `batch(fn)`.
     """
@@ -279,5 +304,14 @@ def batch(fn: Callable[[], T] | None = None) -> Any:
             return fn()
     return _batch_cm()
 
-__all__ = ["signal", "computed", "effect", "batch", "CycleError", "ComputedSideEffectError", "Signal", "Computed"]
 
+__all__ = [
+    "signal",
+    "computed",
+    "effect",
+    "batch",
+    "CycleError",
+    "ComputedSideEffectError",
+    "Signal",
+    "Computed",
+]

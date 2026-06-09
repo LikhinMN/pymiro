@@ -1,7 +1,9 @@
 """
 Design tokens for pymiro.
 """
+
 from dataclasses import dataclass
+
 
 @dataclass(frozen=True)
 class ColorTokens:
@@ -32,6 +34,7 @@ class ColorTokens:
     error_text: str
     info_text: str
 
+
 @dataclass(frozen=True)
 class SpacingTokens:
     xs: int = 4
@@ -40,6 +43,7 @@ class SpacingTokens:
     lg: int = 24
     xl: int = 32
     xxl: int = 48
+
 
 @dataclass(frozen=True)
 class TypographyTokens:
@@ -57,6 +61,7 @@ class TypographyTokens:
     weight_bold: int = 700
     line_height: float = 1.6
 
+
 @dataclass(frozen=True)
 class RadiusTokens:
     sm: int = 4
@@ -64,6 +69,7 @@ class RadiusTokens:
     lg: int = 8
     xl: int = 12
     full: int = 9999
+
 
 @dataclass(frozen=True)
 class ShadowTokens:
