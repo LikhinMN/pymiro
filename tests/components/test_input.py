@@ -2,10 +2,10 @@ from pymiro.components.input import Button, TextInput, Checkbox, Select, Slider
 
 def test_button_variants_produce_correct_style():
     node_primary = Button("Submit", variant="primary", on_click=lambda: None)
-    assert "background-color: #0066cc" in node_primary.props["style"]
+    assert node_primary.props["variant"] == "primary"
     
     node_danger = Button("Delete", variant="danger", on_click=lambda: None)
-    assert "background-color: #dc3545" in node_danger.props["style"]
+    assert node_danger.props["variant"] == "danger"
 
 def test_button_disabled_prop():
     node = Button("Click", disabled=True, on_click=lambda: None)

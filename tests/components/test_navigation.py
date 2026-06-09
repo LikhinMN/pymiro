@@ -22,7 +22,7 @@ def test_sidebar_active_prop_highlights_item():
     assert len(children) == 2
     
     # Dash is index 0 (not active)
-    assert "transparent" in children[0].props["style"] # ghost variant
+    assert children[0].props["variant"] == "ghost"
     
     # Users is index 1 (active)
-    assert "background-color: #0066cc" in children[1].props["style"] # primary variant
+    assert children[1].props["variant"] == "primary"

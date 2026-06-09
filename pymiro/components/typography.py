@@ -7,20 +7,26 @@ from pymiro.core.component import component
 from pymiro.core.vnode import VNode
 from pymiro.components.layout import _build_props
 
+from pymiro.theme.provider import use_theme
+
 @component
 def Heading(
     text: str,
     level: int = 1,
-    color: str = "#000000",
+    color: str | None = None,
     bold: bool = True,
     style: dict[str, str] | None = None,
     class_name: str | None = None,
     key: str | None = None
 ) -> VNode:
-    size = {1: 32, 2: 24, 3: 18, 4: 14}.get(level, 32)
-    s = {"font-size": f"{size}px", "color": color}
+    theme = use_theme()
+    t = theme.typography
+    size = {1: t.size_3xl, 2: t.size_2xl, 3: t.size_xl, 4: t.size_md}.get(level, t.size_3xl)
+    _c = color if color is not None else theme.colors.text_primary
+    
+    s = {"font-size": f"{size}px", "color": _c}
     if bold:
-        s["font-weight"] = "bold"
+        s["font-weight"] = str(t.weight_bold)
         
     if style:
         s.update(style)
@@ -31,17 +37,22 @@ def Heading(
 @component
 def Text(
     text: str,
-    size: int = 14,
-    color: str = "#000000",
+    size: int | None = None,
+    color: str | None = None,
     bold: bool = False,
     italic: bool = False,
     style: dict[str, str] | None = None,
     class_name: str | None = None,
     key: str | None = None
 ) -> VNode:
-    s = {"font-size": f"{size}px", "color": color}
+    theme = use_theme()
+    t = theme.typography
+    _s = size if size is not None else t.size_md
+    _c = color if color is not None else theme.colors.text_primary
+    
+    s = {"font-size": f"{_s}px", "color": _c}
     if bold:
-        s["font-weight"] = "bold"
+        s["font-weight"] = str(t.weight_bold)
     if italic:
         s["font-style"] = "italic"
         
@@ -54,12 +65,23 @@ def Text(
 @component
 def Code(
     text: str,
-    size: int = 13,
+    size: int | None = None,
     style: dict[str, str] | None = None,
     class_name: str | None = None,
     key: str | None = None
 ) -> VNode:
-    s = {"font-size": f"{size}px", "font-family": "monospace", "background-color": "#f5f5f5", "padding": "2px 4px"}
+    theme = use_theme()
+    t = theme.typography
+    _s = size if size is not None else t.size_sm
+    
+    s = {
+        "font-size": f"{_s}px", 
+        "font-family": t.font_mono, 
+        "background-color": theme.colors.surface, 
+        "color": theme.colors.text_primary,
+        "padding": "2px 4px",
+        "border-radius": f"{theme.radius.sm}px"
+    }
     if style:
         s.update(style)
         
@@ -70,17 +92,20 @@ def Code(
 def Link(
     text: str,
     on_click: Callable[..., Any],
-    color: str = "#0066cc",
+    color: str | None = None,
     style: dict[str, str] | None = None,
     class_name: str | None = None,
     key: str | None = None
 ) -> VNode:
-    s = {"color": color, "text-decoration": "underline", "cursor": "pointer"}
+    theme = use_theme()
+    _c = color if color is not None else theme.colors.primary
+    
+    s = {"color": _c, "text-decoration": "underline", "cursor": "pointer"}
     if style:
         s.update(style)
         
     props = _build_props({"text": text, "on_click": on_click}, s, class_name)
     # Using button for link for proper click handling
     # We strip button styling via CSS
-    props["style"] = props.get("style", "") + "; border: none; background: transparent; text-align: left;"
+    props["style"] = props.get("style", "") + "; border: none; background: transparent; text-align: left; padding: 0;"
     return VNode(type="button", props=props, children=[], key=key)

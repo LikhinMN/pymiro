@@ -23,7 +23,8 @@ async def test_toast_auto_dismiss():
 
 def test_badge_variant_maps_to_color():
     node = Badge("New", variant="success")
-    assert "background-color: #28a745" in node.props["style"]
+    # Default theme success color is #2d6a4f
+    assert "background-color: #2d6a4f" in node.props["style"]
 
 def test_progressbar_clamps_value():
     node1 = ProgressBar(value=-50)
