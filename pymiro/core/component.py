@@ -18,7 +18,7 @@ class ComponentError(Exception):
 
 _is_in_component: ContextVar[bool] = ContextVar("_is_in_component", default=False)
 _current_disposers: ContextVar[list[Callable[[], None]]] = ContextVar("_current_disposers")
-_component_states: dict[Callable[..., Any], list[Any]] = {}
+_component_states: ContextVar[dict[Callable[..., Any], list[Any]]] = ContextVar("_component_states")
 _current_component: ContextVar[Callable[..., Any] | None] = ContextVar("_current_component", default=None)
 _hook_index: ContextVar[int] = ContextVar("_hook_index", default=0)
 
@@ -33,12 +33,18 @@ def component(fn: F) -> F:
         prev_comp = _current_component.get()
         prev_idx = _hook_index.get()
         
+        try:
+            states = _component_states.get()
+        except LookupError:
+            states = {}
+            _component_states.set(states)
+            
         _is_in_component.set(True)
         _current_component.set(fn)
         _hook_index.set(0)
         
-        if fn not in _component_states:
-            _component_states[fn] = []
+        if fn not in states:
+            states[fn] = []
             
         disposers: list[Callable[[], None]] = []
         token_disp = _current_disposers.set(disposers)
@@ -81,7 +87,13 @@ def use_signal(initial: T) -> Signal[T]:
     idx = _hook_index.get()
     
     if comp is not None:
-        state_list = _component_states[comp]
+        try:
+            states = _component_states.get()
+        except LookupError:
+            states = {}
+            _component_states.set(states)
+            
+        state_list = states[comp]
         if idx >= len(state_list):
             state_list.append(signal(initial))
         sig = state_list[idx]

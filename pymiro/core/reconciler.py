@@ -8,6 +8,9 @@ from typing import Any, Callable
 
 from pymiro.core.vnode import VNode
 
+class ReconcilerError(Exception):
+    pass
+
 @dataclass
 class CreateNode:
     node_id: str
@@ -55,7 +58,15 @@ def _diff_children(
     old_vnodes = [c for c in old_children if isinstance(c, VNode)]
     new_vnodes = [c for c in new_children if isinstance(c, VNode)]
     
-    use_keys = any(c.key is not None for c in old_vnodes) or any(c.key is not None for c in new_vnodes)
+    old_keyed = [c.key is not None for c in old_vnodes]
+    new_keyed = [c.key is not None for c in new_vnodes]
+    
+    if any(old_keyed) and not all(old_keyed):
+        raise ReconcilerError("Mixing keyed and unkeyed children is illegal")
+    if any(new_keyed) and not all(new_keyed):
+        raise ReconcilerError("Mixing keyed and unkeyed children is illegal")
+        
+    use_keys = all(old_keyed) or all(new_keyed) and len(new_vnodes) > 0
     
     if not use_keys:
         max_len = max(len(old_vnodes), len(new_vnodes))
@@ -81,20 +92,20 @@ def _diff_children(
     else:
         old_map = {}
         for i, c in enumerate(old_vnodes):
-            k = c.key if c.key is not None else f"__unkeyed_{i}"
+            k = c.key
             if k in old_map:
-                raise ValueError(f"Duplicate key: {k}")
+                raise ReconcilerError(f"Duplicate key: {k}")
             old_map[k] = c
             
         new_map = {}
         for i, c in enumerate(new_vnodes):
-            k = c.key if c.key is not None else f"__unkeyed_{i}"
+            k = c.key
             if k in new_map:
-                raise ValueError(f"Duplicate key: {k}")
+                raise ReconcilerError(f"Duplicate key: {k}")
             new_map[k] = c
         
-        old_keys = [c.key if c.key is not None else f"__unkeyed_{i}" for i, c in enumerate(old_vnodes)]
-        new_keys = [c.key if c.key is not None else f"__unkeyed_{i}" for i, c in enumerate(new_vnodes)]
+        old_keys = [c.key for c in old_vnodes]
+        new_keys = [c.key for c in new_vnodes]
         
         last_index = 0
         needs_set_children = len(old_vnodes) != len(new_vnodes)

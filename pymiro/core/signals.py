@@ -14,6 +14,10 @@ class CycleError(Exception):
     """Raised when a cyclical dependency is detected in computed signals or effects."""
     pass
 
+class ComputedSideEffectError(Exception):
+    """Raised when an effect is created inside a computed signal."""
+    pass
+
 class _Publisher(Protocol):
     def _add_subscriber(self, subscriber: "_Subscriber") -> None: ...
     def _remove_subscriber(self, subscriber: "_Subscriber") -> None: ...
@@ -26,6 +30,7 @@ _current_tracking_context: ContextVar[_Subscriber | None] = ContextVar("_current
 _evaluation_stack: ContextVar[tuple[Any, ...]] = ContextVar("_evaluation_stack", default=())
 _batch_depth: ContextVar[int] = ContextVar("_batch_depth", default=0)
 _batched_effects: ContextVar[set["_Effect"]] = ContextVar("_batched_effects", default=set())
+_active_effects: set["_Effect"] = set()
 
 class Signal(Protocol[T]):
     """Protocol for a reactive signal."""
@@ -129,38 +134,43 @@ class _Computed(Generic[T]):
 
 class _Effect:
     def __init__(self, fn: Callable[[], None]) -> None:
+        if isinstance(_current_tracking_context.get(), _Computed):
+            raise ComputedSideEffectError("Cannot create an effect inside a computed signal")
+            
         self._fn = fn
         self._dependencies: set[_Publisher] = set()
         self._active = True
+        _active_effects.add(self)
         self._run()
 
     def _run(self) -> None:
         if not self._active:
             return
 
-        current_stack = _evaluation_stack.get()
-        if self in current_stack:
-            names = []
-            for item in current_stack + (self,):
-                if hasattr(item, '_fn'):
-                    names.append(getattr(item._fn, '__name__', str(item)))
-                else:
-                    names.append(str(item))
-            raise CycleError(f"Cycle detected: {' -> '.join(names)}")
+        with _batch_cm():
+            current_stack = _evaluation_stack.get()
+            if self in current_stack:
+                names = []
+                for item in current_stack + (self,):
+                    if hasattr(item, '_fn'):
+                        names.append(getattr(item._fn, '__name__', str(item)))
+                    else:
+                        names.append(str(item))
+                raise CycleError(f"Cycle detected: {' -> '.join(names)}")
 
-        for dep in self._dependencies:
-            dep._remove_subscriber(self)
-        self._dependencies.clear()
+            for dep in self._dependencies:
+                dep._remove_subscriber(self)
+            self._dependencies.clear()
 
-        prev_context = _current_tracking_context.get()
-        _current_tracking_context.set(self)
-        _evaluation_stack.set(current_stack + (self,))
+            prev_context = _current_tracking_context.get()
+            _current_tracking_context.set(self)
+            _evaluation_stack.set(current_stack + (self,))
 
-        try:
-            self._fn()
-        finally:
-            _evaluation_stack.set(current_stack)
-            _current_tracking_context.set(prev_context)
+            try:
+                self._fn()
+            finally:
+                _evaluation_stack.set(current_stack)
+                _current_tracking_context.set(prev_context)
 
     def _notify(self) -> None:
         if not self._active:
@@ -175,6 +185,7 @@ class _Effect:
 
     def dispose(self) -> None:
         self._active = False
+        _active_effects.discard(self)
         for dep in self._dependencies:
             dep._remove_subscriber(self)
         self._dependencies.clear()
@@ -193,19 +204,29 @@ def _batch_cm() -> Generator[None, Any, None]:
         exc_info = e
         raise
     finally:
-        _batch_depth.set(depth)
         if depth == 0:
             if exc_info is not None:
+                _batch_depth.set(0)
                 _batched_effects.set(set())
             else:
-                while True:
-                    effects = _batched_effects.get()
-                    if not effects:
-                        break
-                    _batched_effects.set(set())
-                    for eff in effects:
-                        if getattr(eff, '_active', True):
-                            eff._run()
+                flush_count = 0
+                try:
+                    while True:
+                        effects = _batched_effects.get()
+                        if not effects:
+                            break
+                        flush_count += 1
+                        if flush_count > 100:
+                            _batched_effects.set(set())
+                            raise CycleError("Maximum batch flush limit exceeded. Cycle detected.")
+                        _batched_effects.set(set())
+                        for eff in effects:
+                            if getattr(eff, '_active', True):
+                                eff._run()
+                finally:
+                    _batch_depth.set(0)
+        else:
+            _batch_depth.set(depth)
 
 
 def signal(value: T) -> Signal[T]:
@@ -258,4 +279,5 @@ def batch(fn: Callable[[], T] | None = None) -> Any:
             return fn()
     return _batch_cm()
 
-__all__ = ["signal", "computed", "effect", "batch", "CycleError", "Signal", "Computed"]
+__all__ = ["signal", "computed", "effect", "batch", "CycleError", "ComputedSideEffectError", "Signal", "Computed"]
+
