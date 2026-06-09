@@ -34,7 +34,11 @@ def create_widget(vnode_type: str) -> QWidget:
     else:
         raise ValueError(f"Unknown vnode type: {vnode_type}")
 
-    widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+    if isinstance(widget, (QPushButton, QLineEdit)):
+        widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+    else:
+        widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        
     return widget
 
 def apply_prop(widget: QWidget, key: str, value: Any) -> None:
@@ -58,6 +62,11 @@ def apply_prop(widget: QWidget, key: str, value: Any) -> None:
             widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         else:
             widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+    elif key == "width":
+        if value == "full":
+            policy = widget.sizePolicy()
+            policy.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+            widget.setSizePolicy(policy)
 
 def remove_prop(widget: QWidget, key: str) -> None:
     if key in ("text", "label", "children"):
@@ -71,5 +80,12 @@ def remove_prop(widget: QWidget, key: str) -> None:
         widget.setStyleSheet("")
     elif key == "stretch":
         widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+    elif key == "width":
+        policy = widget.sizePolicy()
+        if isinstance(widget, (QPushButton, QLineEdit)):
+            policy.setHorizontalPolicy(QSizePolicy.Policy.Fixed)
+        else:
+            policy.setHorizontalPolicy(QSizePolicy.Policy.Preferred)
+        widget.setSizePolicy(policy)
 
 __all__ = ["create_widget", "apply_prop", "remove_prop"]
