@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
     "pyside6>=6.7.0",
     "qasync>=0.27.0",
+    "watchdog>=6.0.0",
 ]
 
 [project.optional-dependencies]

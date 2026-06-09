@@ -12,14 +12,29 @@ from pymiro.core.vnode import VNode
 from pymiro.core.reconciler import reconcile
 from pymiro.backends.qt.renderer import QtRenderer
 from pymiro.core.signals import effect
+from pymiro.dev import DevLogger, install_error_handler, HotReloader
 
 class App:
-    def __init__(self, title: str = "pymiro", width: int = 800, height: int = 600) -> None:
+    def __init__(
+        self,
+        title: str = "pymiro",
+        width: int = 800,
+        height: int = 600,
+        dev: bool = False
+    ) -> None:
         self.title = title
         self.width = width
         self.height = height
+        self.dev = dev
         self.renderer: QtRenderer | None = None
         self.current_tree: VNode | None = None
+        self.logger = DevLogger(enabled=dev)
+        self.reloader: HotReloader | None = None
+        
+        if self.dev:
+            install_error_handler()
+            version = sys.version.split(" ")[0]
+            print(f"  [pymiro] v0.1.0 | Python {version} | dev mode on")
 
     def run(self, component: Callable[[], VNode]) -> None:
         # 1. create QApplication
@@ -42,17 +57,29 @@ class App:
         asyncio.set_event_loop(loop)
         
         # 4. setup renderer
-        self.renderer = QtRenderer(root_widget=central_widget)
+        self.renderer = QtRenderer(root_widget=central_widget, logger=self.logger)
+        
+        if self.dev:
+            self.logger.mount(component.__name__)
+            self.reloader = HotReloader(
+                root_component=component,
+                reconciler_fn=lambda old, new: reconcile(old, new, logger=self.logger),
+                renderer=self.renderer,
+                watch_dir=".",
+                logger=self.logger
+            )
         
         is_render_pending = False
         def render_cycle() -> None:
             nonlocal is_render_pending
             is_render_pending = False
             new_tree = component()
-            patches = reconcile(self.current_tree, new_tree)
+            patches = reconcile(self.current_tree, new_tree, logger=self.logger)
             if patches and self.renderer is not None:
                 self.renderer.commit(patches)
             self.current_tree = new_tree
+            if self.reloader:
+                self.reloader.current_tree = new_tree
 
         def schedule_render() -> None:
             nonlocal is_render_pending
@@ -63,9 +90,14 @@ class App:
         # initial render
         self._root_dispose = effect(schedule_render)
         
+        if self.reloader:
+            self.reloader.start()
+        
         # Cleanup on exit
         if hasattr(app, "aboutToQuit"):
             app.aboutToQuit.connect(self._root_dispose)
+            if self.reloader:
+                app.aboutToQuit.connect(self.reloader.stop)
         
         main_window.show()
         

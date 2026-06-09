@@ -237,7 +237,7 @@ def _diff_nodes(
     return node_id
 
 
-def reconcile(old_tree: VNode | None, new_tree: VNode | None) -> list[Patch]:
+def reconcile(old_tree: VNode | None, new_tree: VNode | None, logger: Any = None) -> list[Patch]:
     """
     Diff two VNode trees and produce a minimal list of patches to transform old into new.
     """
@@ -245,8 +245,12 @@ def reconcile(old_tree: VNode | None, new_tree: VNode | None) -> list[Patch]:
     if new_tree is None:
         if old_tree is not None:
             _destroy_tree(old_tree, "root:0", patches)
+        if logger is not None:
+            logger.reconcile(len(patches))
         return patches
     _diff_nodes(old_tree, new_tree, None, 0, patches)
+    if logger is not None:
+        logger.reconcile(len(patches))
     return patches
 
 
