@@ -43,6 +43,12 @@ class QtRenderer(QObject):
                 layout = parent.layout()
                 if layout is not None:
                     layout.addWidget(widget)
+        else:
+            root = self.registry.get("root")
+            if root is not None:
+                layout = root.layout()
+                if layout is not None:
+                    layout.addWidget(widget)
 
     def update(
         self,
