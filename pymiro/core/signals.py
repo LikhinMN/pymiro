@@ -2,6 +2,7 @@
 Reactive signal primitives for pymiro.
 """
 import contextlib
+import weakref
 from collections.abc import Callable, Generator
 from contextvars import ContextVar
 from typing import Any, Generic, Protocol, TypeVar, cast, overload
@@ -39,7 +40,7 @@ class Computed(Protocol[T_co]):
 class _Signal(Generic[T]):
     def __init__(self, value: T) -> None:
         self._value = value
-        self._subscribers: set[_Subscriber] = set()
+        self._subscribers: weakref.WeakSet[_Subscriber] = weakref.WeakSet()
 
     def __call__(self) -> T:
         subscriber = _current_tracking_context.get()
@@ -72,7 +73,7 @@ class _Computed(Generic[T]):
         self._fn = fn
         self._value: T | None = None
         self._dirty = True
-        self._subscribers: set[_Subscriber] = set()
+        self._subscribers: weakref.WeakSet[_Subscriber] = weakref.WeakSet()
         self._dependencies: set[_Publisher] = set()
 
     def __call__(self) -> T:
@@ -185,19 +186,26 @@ def _batch_cm() -> Generator[None, Any, None]:
     _batch_depth.set(depth + 1)
     if depth == 0:
         _batched_effects.set(set())
+    exc_info = None
     try:
         yield
+    except BaseException as e:
+        exc_info = e
+        raise
     finally:
         _batch_depth.set(depth)
         if depth == 0:
-            while True:
-                effects = _batched_effects.get()
-                if not effects:
-                    break
+            if exc_info is not None:
                 _batched_effects.set(set())
-                for eff in effects:
-                    if getattr(eff, '_active', True):
-                        eff._run()
+            else:
+                while True:
+                    effects = _batched_effects.get()
+                    if not effects:
+                        break
+                    _batched_effects.set(set())
+                    for eff in effects:
+                        if getattr(eff, '_active', True):
+                            eff._run()
 
 
 def signal(value: T) -> Signal[T]:

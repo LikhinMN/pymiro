@@ -107,7 +107,7 @@ def test_full_integration(qtbot):
         renderer.commit(patches)
         current_tree = new_tree
         
-    effect(render_cycle)
+    _root_dispose = effect(render_cycle)
     
     qtbot.wait(10) # process initial render events
     

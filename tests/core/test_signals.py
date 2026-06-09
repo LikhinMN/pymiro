@@ -60,7 +60,7 @@ def test_effect_runs_immediately():
         runs += 1
         count()
         
-    effect(my_effect)
+    _dispose = effect(my_effect)
     assert runs == 1
 
 def test_effect_reruns_on_dependency_change():
@@ -72,7 +72,7 @@ def test_effect_reruns_on_dependency_change():
         runs += 1
         count()
         
-    effect(my_effect)
+    _dispose = effect(my_effect)
     assert runs == 1
     
     count.set(2)
@@ -108,7 +108,7 @@ def test_batch_defers_notifications():
         first()
         last()
         
-    effect(my_effect)
+    _dispose = effect(my_effect)
     assert runs == 1
     
     with batch():
@@ -130,7 +130,7 @@ def test_computed_depending_on_signal_depending_on_signal_chain():
         runs += 1
         quad()
         
-    effect(my_effect)
+    _dispose = effect(my_effect)
     assert runs == 1
     assert quad() == 4
     
@@ -210,7 +210,7 @@ def test_batch_function_decorator():
         runs += 1
         num()
         
-    effect(my_effect)
+    _dispose = effect(my_effect)
     assert runs == 1
     
     def update():

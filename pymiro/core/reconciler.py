@@ -73,17 +73,28 @@ def _diff_children(
                     needs_set_children = True
             elif old_c is not None:
                 c_id = get_node_id(parent_id, i, None)
-                patches.append(DestroyNode(node_id=c_id))
+                _destroy_tree(old_c, c_id, patches)
                 
         if needs_set_children:
             patches.append(SetChildren(parent_id=parent_id, child_ids=child_ids))
             
     else:
-        old_map = {(c.key if c.key is not None else str(i)): c for i, c in enumerate(old_vnodes)}
-        new_map = {(c.key if c.key is not None else str(i)): c for i, c in enumerate(new_vnodes)}
+        old_map = {}
+        for i, c in enumerate(old_vnodes):
+            k = c.key if c.key is not None else f"__unkeyed_{i}"
+            if k in old_map:
+                raise ValueError(f"Duplicate key: {k}")
+            old_map[k] = c
+            
+        new_map = {}
+        for i, c in enumerate(new_vnodes):
+            k = c.key if c.key is not None else f"__unkeyed_{i}"
+            if k in new_map:
+                raise ValueError(f"Duplicate key: {k}")
+            new_map[k] = c
         
-        old_keys = [c.key if c.key is not None else str(i) for i, c in enumerate(old_vnodes)]
-        new_keys = [c.key if c.key is not None else str(i) for i, c in enumerate(new_vnodes)]
+        old_keys = [c.key if c.key is not None else f"__unkeyed_{i}" for i, c in enumerate(old_vnodes)]
+        new_keys = [c.key if c.key is not None else f"__unkeyed_{i}" for i, c in enumerate(new_vnodes)]
         
         last_index = 0
         needs_set_children = len(old_vnodes) != len(new_vnodes)
@@ -113,13 +124,26 @@ def _diff_children(
             key = old_keys[i]
             if key not in new_map:
                 c_id = get_node_id(parent_id, i, old_c.key)
-                patches.append(DestroyNode(node_id=c_id))
+                _destroy_tree(old_c, c_id, patches)
                 
         old_ids = [get_node_id(parent_id, i, c.key) for i, c in enumerate(old_vnodes)]
         new_ids = [get_node_id(parent_id, i, c.key) for i, c in enumerate(new_vnodes)]
         
         if old_ids != new_ids or needs_set_children:
             patches.append(SetChildren(parent_id=parent_id, child_ids=new_ids))
+
+
+def _destroy_tree(node: VNode, node_id: str, patches: list[Patch]) -> None:
+    for i, child in enumerate(node.children):
+        if isinstance(child, VNode):
+            c_id = get_node_id(node_id, i, child.key)
+            _destroy_tree(child, c_id, patches)
+            
+    if "__disposers__" in node.props:
+        for disp in node.props["__disposers__"]:
+            disp()
+            
+    patches.append(DestroyNode(node_id=node_id))
 
 
 def _diff_nodes(
@@ -131,6 +155,11 @@ def _diff_nodes(
 ) -> str:
     node_id = get_node_id(parent_id, index, new_node.key)
     
+    if old_node is not None and "__disposers__" in old_node.props:
+        # Call disposers from previous render
+        for disp in old_node.props["__disposers__"]:
+            disp()
+            
     if old_node is None:
         props = dict(new_node.props)
         if new_node.children and isinstance(new_node.children[0], str):
@@ -155,7 +184,7 @@ def _diff_nodes(
         return node_id
 
     if old_node.type != new_node.type:
-        patches.append(DestroyNode(node_id=node_id))
+        _destroy_tree(old_node, node_id, patches)
         
         props = dict(new_node.props)
         if new_node.children and isinstance(new_node.children[0], str):
@@ -208,11 +237,15 @@ def _diff_nodes(
     return node_id
 
 
-def reconcile(old_tree: VNode | None, new_tree: VNode) -> list[Patch]:
+def reconcile(old_tree: VNode | None, new_tree: VNode | None) -> list[Patch]:
     """
     Diff two VNode trees and produce a minimal list of patches to transform old into new.
     """
     patches: list[Patch] = []
+    if new_tree is None:
+        if old_tree is not None:
+            _destroy_tree(old_tree, "root:0", patches)
+        return patches
     _diff_nodes(old_tree, new_tree, None, 0, patches)
     return patches
 

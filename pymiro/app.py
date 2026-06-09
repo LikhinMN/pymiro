@@ -44,16 +44,28 @@ class App:
         # 4. setup renderer
         self.renderer = QtRenderer(root_widget=central_widget)
         
-        # 5. Connect signal graph -> schedule re-reconcile on change
+        is_render_pending = False
         def render_cycle() -> None:
+            nonlocal is_render_pending
+            is_render_pending = False
             new_tree = component()
             patches = reconcile(self.current_tree, new_tree)
             if patches and self.renderer is not None:
                 self.renderer.commit(patches)
             self.current_tree = new_tree
 
+        def schedule_render() -> None:
+            nonlocal is_render_pending
+            if not is_render_pending:
+                is_render_pending = True
+                loop.call_soon_threadsafe(render_cycle)
+
         # initial render
-        effect(render_cycle)
+        self._root_dispose = effect(schedule_render)
+        
+        # Cleanup on exit
+        if hasattr(app, "aboutToQuit"):
+            app.aboutToQuit.connect(self._root_dispose)
         
         main_window.show()
         

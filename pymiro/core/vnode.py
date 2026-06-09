@@ -13,9 +13,15 @@ class VNode:
     children: list[VNode | str]
     key: str | None = None
 
-def _create_vnode(type_: str, children: tuple[VNode | str, ...], props: dict[str, Any]) -> VNode:
+def _create_vnode(type_: str, children: tuple[Any, ...], props: dict[str, Any]) -> VNode:
     key = props.pop("key", None)
-    return VNode(type=type_, props=props, children=list(children), key=key)
+    flat_children: list[VNode | str] = []
+    for child in children:
+        if isinstance(child, list):
+            flat_children.extend(child)
+        else:
+            flat_children.append(child)
+    return VNode(type=type_, props=props, children=flat_children, key=key)
 
 def Div(*children: VNode | str, **props: Any) -> VNode:
     """Create a Div VNode."""

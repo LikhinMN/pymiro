@@ -12,3 +12,6 @@ wheels/
 #agents
 .agents/
 skills-lock.json
+
+#exmaples
+examples/

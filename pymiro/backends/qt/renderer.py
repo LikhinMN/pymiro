@@ -143,30 +143,42 @@ class QtRenderer(QObject):
         if widget is None:
             return
             
-        self.unbind_event(node_id, event)
+        if (node_id, event) in self.event_connections:
+            # Update the existing wrapper without disconnecting Qt signal
+            self.event_connections[(node_id, event)]["handler"] = handler
+            return
+            
+        state = {"handler": handler}
         
+        def wrapper(*args: Any, **kwargs: Any) -> None:
+            state["handler"](*args, **kwargs)
+            
         conn = None
         if event == "on_click" and hasattr(widget, "clicked"):
-            conn = widget.clicked.connect(handler)
+            conn = widget.clicked.connect(wrapper)
         elif event == "on_change" and hasattr(widget, "textChanged"):
-            conn = widget.textChanged.connect(handler)
+            conn = widget.textChanged.connect(wrapper)
             
         if conn is not None:
-            self.event_connections[(node_id, event)] = conn
+            self.event_connections[(node_id, event)] = {"conn": conn, "wrapper": wrapper, "state": state}
 
     def unbind_event(
         self,
         node_id: str,
         event: str
     ) -> None:
-        conn = self.event_connections.pop((node_id, event), None)
-        if conn is not None:
+        data = self.event_connections.pop((node_id, event), None)
+        if data is not None:
+            conn = data["conn"]
             widget = self.registry.get(node_id)
             if widget is not None:
-                if event == "on_click" and hasattr(widget, "clicked"):
-                    widget.clicked.disconnect(conn)
-                elif event == "on_change" and hasattr(widget, "textChanged"):
-                    widget.textChanged.disconnect(conn)
+                try:
+                    if event == "on_click" and hasattr(widget, "clicked"):
+                        widget.clicked.disconnect(conn)
+                    elif event == "on_change" and hasattr(widget, "textChanged"):
+                        widget.textChanged.disconnect(conn)
+                except Exception:
+                    pass
 
     @Slot()
     def _apply_patches(self) -> None:

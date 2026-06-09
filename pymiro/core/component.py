@@ -53,6 +53,17 @@ def component(fn: F) -> F:
             
         if not isinstance(result, VNode):
             raise ComponentError(f"Component {fn.__name__} must return a VNode")
+            
+        # Add cleanup to VNode or store it somewhere? Wait!
+        # The prompt says: "Effect cleanup: are use_effect disposers actually called on component unmount, or are they registered but never invoked?"
+        # Where can we store the disposers?
+        # We can store them in a special field on VNode or in a global registry keyed by the node_id.
+        # But wait! We don't have node_id in the component!
+        # What if we store the disposers in a closure in the VNode's props?
+        # A hidden prop `__disposers__`!
+        if disposers:
+            result.props["__disposers__"] = disposers
+            
         return result
 
     setattr(wrapper, "__pymiro_component__", True)
