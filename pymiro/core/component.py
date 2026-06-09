@@ -18,6 +18,9 @@ class ComponentError(Exception):
 
 _is_in_component: ContextVar[bool] = ContextVar("_is_in_component", default=False)
 _current_disposers: ContextVar[list[Callable[[], None]]] = ContextVar("_current_disposers")
+_component_states: dict[Callable[..., Any], list[Any]] = {}
+_current_component: ContextVar[Callable[..., Any] | None] = ContextVar("_current_component", default=None)
+_hook_index: ContextVar[int] = ContextVar("_hook_index", default=0)
 
 def component(fn: F) -> F:
     """
@@ -27,8 +30,16 @@ def component(fn: F) -> F:
     @functools.wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         prev_is_in = _is_in_component.get()
-        _is_in_component.set(True)
+        prev_comp = _current_component.get()
+        prev_idx = _hook_index.get()
         
+        _is_in_component.set(True)
+        _current_component.set(fn)
+        _hook_index.set(0)
+        
+        if fn not in _component_states:
+            _component_states[fn] = []
+            
         disposers: list[Callable[[], None]] = []
         token_disp = _current_disposers.set(disposers)
         
@@ -36,6 +47,8 @@ def component(fn: F) -> F:
             result = fn(*args, **kwargs)
         finally:
             _is_in_component.set(prev_is_in)
+            _current_component.set(prev_comp)
+            _hook_index.set(prev_idx)
             _current_disposers.reset(token_disp)
             
         if not isinstance(result, VNode):
@@ -52,6 +65,18 @@ def use_signal(initial: T) -> Signal[T]:
     """
     if not _is_in_component.get():
         raise ComponentError("use_signal must be called inside a component")
+        
+    comp = _current_component.get()
+    idx = _hook_index.get()
+    
+    if comp is not None:
+        state_list = _component_states[comp]
+        if idx >= len(state_list):
+            state_list.append(signal(initial))
+        sig = state_list[idx]
+        _hook_index.set(idx + 1)
+        return cast(Signal[T], sig)
+        
     return signal(initial)
 
 
