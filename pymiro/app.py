@@ -13,6 +13,9 @@ from pymiro.core.reconciler import reconcile
 from pymiro.backends.qt.renderer import QtRenderer
 from pymiro.core.signals import effect
 from pymiro.dev import DevLogger, install_error_handler, HotReloader
+from pymiro.theme.provider import ThemeProvider
+from pymiro.theme.theme import Theme
+from pymiro.theme.presets import DEFAULT_THEME, DARK_THEME
 
 class App:
     def __init__(
@@ -20,7 +23,8 @@ class App:
         title: str = "pymiro",
         width: int = 800,
         height: int = 600,
-        dev: bool = False
+        dev: bool = False,
+        theme: str | Theme = "default"
     ) -> None:
         self.title = title
         self.width = width
@@ -30,6 +34,11 @@ class App:
         self.current_tree: VNode | None = None
         self.logger = DevLogger(enabled=dev)
         self.reloader: HotReloader | None = None
+        
+        if isinstance(theme, str):
+            self.theme = DARK_THEME if theme == "dark" else DEFAULT_THEME
+        else:
+            self.theme = theme
         
         if self.dev:
             install_error_handler()
@@ -41,6 +50,8 @@ class App:
         app = QApplication.instance()
         if app is None:
             app = QApplication(sys.argv)
+            
+        ThemeProvider.set(self.theme)
             
         # 2. create main QMainWindow
         main_window = QMainWindow()
