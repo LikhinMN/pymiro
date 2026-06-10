@@ -20,6 +20,27 @@ def Toast(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Toast component.
+
+    Args:
+        message: Configuration for message.
+        variant: Configuration for variant.
+        duration: Configuration for duration.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Toast
+
+        Toast()
+        ```
+    """
     theme = use_theme()
     visible = use_signal(True)
 
@@ -84,6 +105,26 @@ def Spinner(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Spinner component.
+
+    Args:
+        size: Configuration for size.
+        color: Configuration for color.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Spinner
+
+        Spinner()
+        ```
+    """
     theme = use_theme()
     _c = color if color is not None else theme.colors.primary
     s = {
@@ -107,6 +148,26 @@ def Badge(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Badge component.
+
+    Args:
+        text: Configuration for text.
+        variant: Configuration for variant.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Badge
+
+        Badge()
+        ```
+    """
     theme = use_theme()
     c = theme.colors
     t = theme.typography
@@ -150,6 +211,27 @@ def ProgressBar(
 ) -> VNode:
     # Progress bar styling is mainly handled by QSS, but we can emit a chunk color property
     # or just rely on QSS entirely if color is None.
+    """
+    Renders a ProgressBar component.
+
+    Args:
+        value: Configuration for value.
+        color: Configuration for color.
+        height: Configuration for height.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import ProgressBar
+
+        ProgressBar()
+        ```
+    """
     clamped_value = max(0, min(100, int(value)))
     s = {"min-height": f"{height}px", "max-height": f"{height}px"}
     if color is not None:

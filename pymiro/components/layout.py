@@ -34,6 +34,28 @@ def Stack(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Stack component.
+
+    Args:
+        spacing: Configuration for spacing.
+        padding: Configuration for padding.
+        align: Configuration for align.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+        *children: Configuration for *children.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Stack
+
+        Stack()
+        ```
+    """
     theme = use_theme()
     _sp = spacing if spacing is not None else theme.spacing.sm
     _pd = padding if padding is not None else 0
@@ -54,6 +76,28 @@ def Row(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Row component.
+
+    Args:
+        spacing: Configuration for spacing.
+        padding: Configuration for padding.
+        align: Configuration for align.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+        *children: Configuration for *children.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Row
+
+        Row()
+        ```
+    """
     theme = use_theme()
     _sp = spacing if spacing is not None else theme.spacing.sm
     _pd = padding if padding is not None else 0
@@ -74,6 +118,28 @@ def Grid(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Grid component.
+
+    Args:
+        cols: Configuration for cols.
+        spacing: Configuration for spacing.
+        padding: Configuration for padding.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+        *children: Configuration for *children.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Grid
+
+        Grid()
+        ```
+    """
     theme = use_theme()
     _sp = spacing if spacing is not None else theme.spacing.sm
     _pd = padding if padding is not None else 0
@@ -91,6 +157,25 @@ def Spacer(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Spacer component.
+
+    Args:
+        size: Configuration for size.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Spacer
+
+        Spacer()
+        ```
+    """
     use_theme()
     props = _build_props({}, style, class_name)
     if size is not None:
@@ -108,6 +193,26 @@ def Divider(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Divider component.
+
+    Args:
+        color: Configuration for color.
+        thickness: Configuration for thickness.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Divider
+
+        Divider()
+        ```
+    """
     theme = use_theme()
     _c = color if color is not None else theme.colors.border
     props = _build_props({"thickness": thickness}, style, class_name)

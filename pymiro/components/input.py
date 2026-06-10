@@ -22,6 +22,29 @@ def Button(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Button component.
+
+    Args:
+        label: Configuration for label.
+        on_click: Configuration for on_click.
+        variant: Configuration for variant.
+        disabled: Configuration for disabled.
+        full_width: Configuration for full_width.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Button
+
+        Button()
+        ```
+    """
     use_theme()
     width = "full" if full_width else "auto"
     props = _build_props(
@@ -49,6 +72,29 @@ def TextInput(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a TextInput component.
+
+    Args:
+        value: Configuration for value.
+        placeholder: Configuration for placeholder.
+        on_change: Configuration for on_change.
+        disabled: Configuration for disabled.
+        full_width: Configuration for full_width.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import TextInput
+
+        TextInput()
+        ```
+    """
     use_theme()
     width = "full" if full_width else "auto"
     props = _build_props(
@@ -76,6 +122,28 @@ def Checkbox(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Checkbox component.
+
+    Args:
+        checked: Configuration for checked.
+        label: Configuration for label.
+        on_change: Configuration for on_change.
+        disabled: Configuration for disabled.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Checkbox
+
+        Checkbox()
+        ```
+    """
     use_theme()
     props = _build_props(
         {"checked": checked, "text": label, "disabled": disabled}, style, class_name
@@ -95,6 +163,28 @@ def Select(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Select component.
+
+    Args:
+        options: Configuration for options.
+        value: Configuration for value.
+        on_change: Configuration for on_change.
+        disabled: Configuration for disabled.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Select
+
+        Select()
+        ```
+    """
     use_theme()
     props = _build_props(
         {"options": options, "value": value, "disabled": disabled}, style, class_name
@@ -115,6 +205,29 @@ def Slider(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Slider component.
+
+    Args:
+        value: Configuration for value.
+        min: Configuration for min.
+        max: Configuration for max.
+        step: Configuration for step.
+        on_change: Configuration for on_change.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Slider
+
+        Slider()
+        ```
+    """
     use_theme()
     props = _build_props(
         {"value": value, "min": min, "max": max, "step": step}, style, class_name

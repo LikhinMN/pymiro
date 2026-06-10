@@ -21,6 +21,28 @@ def Heading(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Heading component.
+
+    Args:
+        text: Configuration for text.
+        level: Configuration for level.
+        color: Configuration for color.
+        bold: Configuration for bold.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Heading
+
+        Heading()
+        ```
+    """
     theme = use_theme()
     t = theme.typography
     size = {1: t.size_3xl, 2: t.size_2xl, 3: t.size_xl, 4: t.size_md}.get(
@@ -50,6 +72,29 @@ def Text(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Text component.
+
+    Args:
+        text: Configuration for text.
+        size: Configuration for size.
+        color: Configuration for color.
+        bold: Configuration for bold.
+        italic: Configuration for italic.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Text
+
+        Text()
+        ```
+    """
     theme = use_theme()
     t = theme.typography
     _s = size if size is not None else t.size_md
@@ -76,6 +121,26 @@ def Code(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Code component.
+
+    Args:
+        text: Configuration for text.
+        size: Configuration for size.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Code
+
+        Code()
+        ```
+    """
     theme = use_theme()
     t = theme.typography
     _s = size if size is not None else t.size_sm
@@ -104,6 +169,27 @@ def Link(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Link component.
+
+    Args:
+        text: Configuration for text.
+        on_click: Configuration for on_click.
+        color: Configuration for color.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Link
+
+        Link()
+        ```
+    """
     theme = use_theme()
     _c = color if color is not None else theme.colors.primary
 

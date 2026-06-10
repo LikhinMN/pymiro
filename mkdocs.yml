@@ -32,11 +32,20 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [src]
+          paths: [src, .]
           options:
             show_root_heading: true
             show_source: true
+            show_signature_annotations: true
+            separate_signature: true
 
 nav:
   - Home: index.md
-  - API Reference: api.md
+  - Core API:
+      - App & Reactivity: api/core.md
+  - Components:
+      - Layout: api/components/layout.md
+      - Typography: api/components/typography.md
+      - Input: api/components/input.md
+      - Feedback: api/components/feedback.md
+      - Navigation: api/components/navigation.md

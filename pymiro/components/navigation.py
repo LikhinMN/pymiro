@@ -21,6 +21,27 @@ def Tabs(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Tabs component.
+
+    Args:
+        tabs: Configuration for tabs.
+        active: Configuration for active.
+        on_change: Configuration for on_change.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Tabs
+
+        Tabs()
+        ```
+    """
     use_theme()
     props = _build_props({"tabs": tabs, "active": active}, style, class_name)
     if on_change is not None:
@@ -38,6 +59,28 @@ def Sidebar(
     class_name: str | None = None,
     key: str | None = None,
 ) -> VNode:
+    """
+    Renders a Sidebar component.
+
+    Args:
+        items: Configuration for items.
+        active: Configuration for active.
+        on_change: Configuration for on_change.
+        width: Configuration for width.
+        style: Configuration for style.
+        class_name: Configuration for class_name.
+        key: Configuration for key.
+
+    Returns:
+        VNode: The virtual DOM node representing this component.
+
+    Example:
+        ```python
+        from pymiro.components import Sidebar
+
+        Sidebar()
+        ```
+    """
     theme = use_theme()
     buttons = []
     for i, item in enumerate(items):
