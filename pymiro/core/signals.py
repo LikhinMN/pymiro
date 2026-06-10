@@ -256,8 +256,24 @@ def signal[T](value: T) -> Signal[T]:
     """
     Create a reactive signal holding a value.
 
-    Returns a Signal object which can be called to read its value,
-    or updated using the .set() method.
+    A signal is the core reactive primitive. It holds a value and notifies
+    subscribers (like effects or computed values) whenever the value changes.
+
+    Args:
+        value: The initial value of the signal.
+
+    Returns:
+        Signal: A signal object. Call it `my_signal()` to read the value,
+            or `my_signal.set(new_value)` to update it.
+
+    Example:
+        ```python
+        count = signal(0)
+        print(count())  # 0
+        
+        count.set(1)
+        print(count())  # 1
+        ```
     """
     return _Signal(value)
 
@@ -266,18 +282,57 @@ def computed[T](fn: Callable[[], T]) -> Computed[T]:
     """
     Create a reactive computed value derived from other signals.
 
-    The computed value auto-tracks dependencies and lazily recomputes
-    only when a dependency changes.
+    A computed value automatically tracks which signals it reads. When those
+    signals change, the computed value marks itself as dirty and lazily
+    re-evaluates only when its value is read again.
+
+    Args:
+        fn: A function that computes a value based on signals.
+
+    Returns:
+        Computed: A computed object. Call it to read the derived value.
+
+    Example:
+        ```python
+        first = signal("Hello")
+        last = signal("World")
+        
+        full_name = computed(lambda: f"{first()} {last()}")
+        print(full_name())  # "Hello World"
+        
+        first.set("Hi")
+        print(full_name())  # "Hi World"
+        ```
     """
     return _Computed(fn)
 
 
 def effect(fn: Callable[[], None]) -> Callable[[], None]:
     """
-    Run a function immediately and re-run it when its dependencies change.
+    Create a side effect that automatically re-runs when dependencies change.
 
-    Returns a disposer function. Calling the disposer stops the effect
-    from re-running and cleans up subscriptions.
+    The function is run immediately to determine its dependencies. Whenever any
+    of the signals read during execution change, the function runs again.
+
+    Args:
+        fn: A function containing side effects (e.g., printing, DOM updates).
+
+    Returns:
+        Callable: A disposer function. Call it to stop the effect and clean up
+            its subscriptions.
+
+    Example:
+        ```python
+        count = signal(0)
+        
+        # Runs immediately and prints "Count is 0"
+        dispose = effect(lambda: print(f"Count is {count()}"))
+        
+        count.set(1)  # Automatically prints "Count is 1"
+        
+        dispose()  # Stop listening
+        count.set(2)  # Nothing prints
+        ```
     """
     e = _Effect(fn)
     return e.dispose
@@ -293,11 +348,30 @@ def batch() -> contextlib.AbstractContextManager[None]: ...
 
 def batch[T](fn: Callable[[], T] | None = None) -> Any:
     """
-    Batch multiple signal updates so that effects only run once
-    after the batch completes.
+    Batch multiple signal updates into a single execution frame.
+
+    When you update multiple signals inside a batch, effects depending on those
+    signals will only run once after the batch completes, preventing unnecessary
+    intermediate renders.
 
     Can be used as a context manager `with batch():` or as a higher-order
     function `batch(fn)`.
+
+    Args:
+        fn: Optional function to run inside the batch.
+
+    Example:
+        ```python
+        first = signal("John")
+        last = signal("Doe")
+        
+        effect(lambda: print(f"Name: {first()} {last()}"))
+        
+        with batch():
+            first.set("Jane")
+            last.set("Smith")
+        # Effect only prints "Name: Jane Smith" once
+        ```
     """
     if fn is not None:
         with _batch_cm():

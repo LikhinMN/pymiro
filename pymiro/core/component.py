@@ -36,7 +36,33 @@ _hook_index: ContextVar[int] = ContextVar("_hook_index", default=0)
 def component[F: Callable[..., Any]](fn: F) -> F:
     """
     Wrap a function into a pymiro component.
-    Validates that the component returns a VNode.
+
+    Components are the building blocks of a pymiro UI. They are regular Python
+    functions that return a `VNode` (like `Text`, `Button`, or `VStack`) and
+    are wrapped in the `@component` decorator. This decorator enables the use
+    of hooks (like `use_signal` or `use_effect`) within the function.
+
+    Args:
+        fn: The function returning a VNode.
+
+    Returns:
+        The wrapped component function.
+
+    Example:
+        ```python
+        from pymiro import component
+        from pymiro.components import Button, Text, VStack
+        from pymiro.core.hooks import use_signal
+
+        @component
+        def Counter():
+            count, set_count = use_signal(0)
+            
+            return VStack(
+                Text(lambda: f"Count: {count()}"),
+                Button("Increment", on_click=lambda: set_count(count() + 1))
+            )
+        ```
     """
 
     @functools.wraps(fn)

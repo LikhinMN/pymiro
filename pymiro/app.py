@@ -20,6 +20,33 @@ from pymiro.theme.theme import Theme
 
 
 class App:
+    """
+    The main application entry point for pymiro.
+
+    This class sets up the Qt application, event loop, and theme, and mounts
+    your root component into the main window.
+
+    Args:
+        title: The window title.
+        width: The initial window width.
+        height: The initial window height.
+        dev: If True, enables hot-reloading and development logging.
+        theme: The theme to use ("default", "dark", or a custom Theme object).
+
+    Example:
+        ```python
+        from pymiro import App, component
+        from pymiro.components import Text
+
+        @component
+        def HelloWorld():
+            return Text("Hello, world!")
+
+        if __name__ == "__main__":
+            app = App(title="My App", width=400, height=300)
+            app.run(HelloWorld)
+        ```
+    """
     def __init__(
         self,
         title: str = "pymiro",
