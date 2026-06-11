@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/pymiro)](https://pypi.org/project/pymiro)
 [![License](https://img.shields.io/pypi/l/pymiro)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-119%20passing-brightgreen)]()
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/pymiro?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/pymiro)
 
 ## What is pymiro?
 
