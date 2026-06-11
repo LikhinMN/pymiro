@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/core/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/components/feedback/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/components/input/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/components/layout/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/components/navigation/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+    <url>
+         <loc>https://LikhinMN.github.io/pymiro/api/components/typography/</loc>
+         <lastmod>2026-06-11</lastmod>
+    </url>
+</urlset>
